@@ -1,0 +1,36 @@
+AllCops:
+  NewCops: enable
+  TargetRubyVersion: 4.0
+  SuggestExtensions: false
+  CacheRootDirectory: tmp
+  Exclude:
+    - vendor/**/*
+    - planning/**/*
+
+Style/FrozenStringLiteralComment:
+  EnforcedStyle: never
+
+Style/Documentation:
+  Enabled: false
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Bundler/OrderedGems:
+  Enabled: false
+
+Metrics/ParameterLists:
+  Max: 8
+
+Metrics/BlockLength:
+  Exclude:
+    - spec/**/*
+
+Metrics/AbcSize:
+  Max: 30
+
+Metrics/MethodLength:
+  Max: 25
+
+Metrics/ClassLength:
+  Max: 120
