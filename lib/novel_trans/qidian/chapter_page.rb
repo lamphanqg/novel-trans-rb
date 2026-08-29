@@ -19,6 +19,10 @@ module NovelTrans
         new(html, chapter_id:).result
       end
 
+      def self.from_page(page, chapter_id:)
+        new("", chapter_id:).result_from_dom(page.evaluate(extract_js, arg: chapter_id))
+      end
+
       def initialize(html, chapter_id: nil)
         @html = html.to_s
         @chapter_id = chapter_id
@@ -30,6 +34,16 @@ module NovelTrans
         return Result.new(title:, body: "", verdict: :blocked) if @html.include?("章节加载失败")
 
         finish(title, extract_body)
+      end
+
+      def result_from_dom(data)
+        data = data.to_h.transform_keys(&:to_s)
+        title = data["title"].to_s
+        body = data["body"].to_s
+        return Result.new(title:, body: "", verdict: :locked) if data["locked"]
+        return Result.new(title:, body: "", verdict: :blocked) if data["loadFailed"]
+
+        finish(title, body)
       end
 
       private
@@ -101,6 +115,11 @@ module NovelTrans
       def first_match(regex)
         @html[regex, 1]
       end
+
+      def self.extract_js
+        @extract_js ||= File.read(File.expand_path("extract_chapter.js", __dir__), encoding: "UTF-8")
+      end
+      private_class_method :extract_js
     end
   end
 end

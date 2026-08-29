@@ -22,15 +22,16 @@ bin/novel-trans status --book 1036645930 --status failed
 
 `status` prints counts by status. Pass `--status` to print matching chapter rows.
 
-`fetch` reads a saved chapter HTML file (the rendered DOM, not View Source) and writes `input/raw/{book_id}/{chapter_id}.txt` plus ledger status:
+Live fetch attaches to Google Chrome started with `bin/qidian-chrome` (profile under `auth/chrome-profile`). Log in there once (QR). Playwright-launched Chrome does not get VIP chapter HTML.
 
 ```sh
-bin/novel-trans fetch --book 1036645930 \
-  --html-file tmp/chapter.html \
-  --chapter-id 747314648
+bin/qidian-chrome   # leave this running
+
+bin/novel-trans fetch --book 1016572786 \
+  --url 'https://www.qidian.com/chapter/1016572786/514924883/'
 ```
 
-`--force` rewrites a chapter that is already `fetched`. Live Qidian download, `login`, `translate`, `upload`, `run`, and `site` are not implemented yet. Fetch, translate, and upload take a book, not a chapter. Thor reserves the method name `run`, so the command is registered as `pipeline` and `bin/novel-trans run` is an alias.
+`--url` is repeatable. Each URL must belong to `--book`. `--html-file` plus `--chapter-id` replays a saved rendered DOM without a browser. `--force` rewrites a chapter that is already `fetched`. Catalog (whole-book) fetch, `login`, `translate`, `upload`, `run`, and `site` are not implemented yet. Thor reserves the method name `run`, so the command is registered as `pipeline` and `bin/novel-trans run` is an alias.
 
 ## Config later
 

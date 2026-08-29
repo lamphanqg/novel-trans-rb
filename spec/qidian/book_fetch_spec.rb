@@ -53,9 +53,28 @@ RSpec.describe NovelTrans::Qidian::BookFetch do
     expect(NovelTrans::ChapterWork.load(book_id, chapter_id).status).to eq("failed")
   end
 
-  it "requires --html-file" do
+  it "requires --url or --html-file" do
     expect do
       described_class.new(book_id:).run
-    end.to raise_error(ArgumentError, /html-file/)
+    end.to raise_error(ArgumentError, /url or --html-file/)
+  end
+
+  it "rejects a chapter URL from another book before opening a browser" do
+    expect do
+      described_class.new(
+        book_id:,
+        urls: ["https://www.qidian.com/chapter/1/2/"]
+      ).run
+    end.to raise_error(ArgumentError, /does not match --book/)
+  end
+
+  it "skips a fetched URL without connecting to Chrome" do
+    expect { fetch("chapter_unlocked.html") }.to output(/fetched/).to_stdout
+    expect do
+      described_class.new(
+        book_id:,
+        urls: ["https://www.qidian.com/chapter/#{book_id}/#{chapter_id}/"]
+      ).run
+    end.to output(/skip #{chapter_id}/).to_stdout
   end
 end

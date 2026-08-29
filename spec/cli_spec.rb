@@ -43,4 +43,20 @@ RSpec.describe NovelTrans::CLI do
   it "names --html-file in fetch help" do
     expect { described_class.start(%w[help fetch]) }.to output(/html-file/).to_stdout
   end
+
+  it "does not take a --cdp flag" do
+    expect { described_class.start(%w[help fetch]) }.not_to output(/cdp/).to_stdout
+  end
+
+  it "tells the operator to start qidian-chrome when Chrome is not listening" do
+    allow(NovelTrans::Qidian::Session).to receive(:connect)
+      .and_raise(NovelTrans::Error, "live fetch needs bin/qidian-chrome")
+    expect do
+      described_class.new.invoke(
+        :fetch,
+        [],
+        { book: book_id, url: ["https://www.qidian.com/chapter/#{book_id}/747314648/"] }
+      )
+    end.to raise_error(NovelTrans::Error, /qidian-chrome/)
+  end
 end
