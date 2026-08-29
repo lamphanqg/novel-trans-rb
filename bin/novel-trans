@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+
+require "bundler/setup"
+require_relative "../lib/novel_trans"
+
+if ARGV.empty?
+  NovelTrans::CLI.start(["help"])
+  exit 1
+end
+
+NovelTrans::CLI.start(ARGV)
