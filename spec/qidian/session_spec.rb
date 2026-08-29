@@ -20,4 +20,11 @@ RSpec.describe NovelTrans::Qidian::Session do
     expect { described_class.connect { nil } }
       .to raise_error(NovelTrans::Error, /qidian-chrome/)
   end
+
+  it "sleeps a random interval between live requests" do
+    session = described_class.allocate
+    allow(session).to receive(:rand).with(described_class::PAUSE_RANGE).and_return(3.0)
+    expect(session).to receive(:sleep).with(3.0)
+    expect { session.pause }.to output(/wait 3.0s/).to_stdout
+  end
 end

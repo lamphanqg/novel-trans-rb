@@ -27,11 +27,12 @@ Live fetch attaches to Google Chrome started with `bin/qidian-chrome` (profile u
 ```sh
 bin/qidian-chrome   # leave this running
 
+bin/novel-trans fetch --book 1016572786
 bin/novel-trans fetch --book 1016572786 \
   --url 'https://www.qidian.com/chapter/1016572786/514924883/'
 ```
 
-`--url` is repeatable. Each URL must belong to `--book`. `--html-file` plus `--chapter-id` replays a saved rendered DOM without a browser. `--force` rewrites a chapter that is already `fetched`. Catalog (whole-book) fetch, `login`, `translate`, `upload`, `run`, and `site` are not implemented yet. Thor reserves the method name `run`, so the command is registered as `pipeline` and `bin/novel-trans run` is an alias.
+`--url` is repeatable. Each URL must belong to `--book`. Omit `--url` to walk the catalog and download every chapter. Fetch waits a few seconds between live requests so Qidian is less likely to rate-limit. `--html-file` plus `--chapter-id` replays a saved rendered DOM without a browser. `--force` rewrites a chapter that is already `fetched`. `login`, `translate`, `upload`, `run`, and `site` are not implemented yet. Thor reserves the method name `run`, so the command is registered as `pipeline` and `bin/novel-trans run` is an alias.
 
 ## Config later
 

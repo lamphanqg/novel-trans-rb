@@ -53,10 +53,12 @@ RSpec.describe NovelTrans::Qidian::BookFetch do
     expect(NovelTrans::ChapterWork.load(book_id, chapter_id).status).to eq("failed")
   end
 
-  it "requires --url or --html-file" do
+  it "connects to qidian-chrome for a catalog fetch" do
+    allow(NovelTrans::Qidian::Session).to receive(:connect)
+      .and_raise(NovelTrans::Error, "live fetch needs bin/qidian-chrome")
     expect do
       described_class.new(book_id:).run
-    end.to raise_error(ArgumentError, /url or --html-file/)
+    end.to raise_error(NovelTrans::Error, /qidian-chrome/)
   end
 
   it "rejects a chapter URL from another book before opening a browser" do
