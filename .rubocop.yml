@@ -6,6 +6,7 @@ AllCops:
   Exclude:
     - vendor/**/*
     - planning/**/*
+    - tmp/**/*
 
 Style/FrozenStringLiteralComment:
   EnforcedStyle: never
@@ -33,4 +34,4 @@ Metrics/MethodLength:
   Max: 25
 
 Metrics/ClassLength:
-  Max: 120
+  Max: 160

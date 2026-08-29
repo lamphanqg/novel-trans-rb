@@ -24,14 +24,27 @@ module NovelTrans
       end
     end
 
-    desc "login", "Save a Qidian Playwright session"
+    desc "login", "Save a Qidian Playwright session to auth/qidian.storageState.json"
     def login
-      not_built("login")
+      Qidian::Session.login
     end
 
-    desc "fetch", "Download every chapter in a book from Qidian"
+    desc "fetch", "Download catalog chapters, or only --url chapters, from Qidian"
+    option :book, type: :string, required: true
+    option :force, type: :boolean, default: false
+    option :html_file, type: :string
+    option :chapter_id, type: :string
+    option :url, type: :string, repeatable: true
+    option :cdp, type: :string
     def fetch
-      not_built("fetch")
+      Qidian::BookFetch.new(
+        book_id: options[:book],
+        force: options[:force],
+        html_file: options[:html_file],
+        chapter_id: options[:chapter_id],
+        urls: Array(options[:url]),
+        cdp: options[:cdp]
+      ).run
     end
 
     desc "translate", "Translate every fetched chapter in a book with Cursor CLI"

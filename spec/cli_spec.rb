@@ -39,4 +39,14 @@ RSpec.describe NovelTrans::CLI do
   it "rejects an unknown --status" do
     expect { invoke_status(status: "done") }.to raise_error(ArgumentError, /unknown status/)
   end
+
+  it "names the storageState path in login help" do
+    expect { described_class.start(%w[help login]) }.to output(/qidian.storageState.json/).to_stdout
+  end
+
+  it "tells the operator to use qidian-chrome when fetch has no --cdp" do
+    expect do
+      described_class.new.invoke(:fetch, [], { book: book_id })
+    end.to raise_error(NovelTrans::Error, /qidian-chrome/)
+  end
 end
