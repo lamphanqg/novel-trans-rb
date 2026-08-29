@@ -20,7 +20,17 @@ bin/novel-trans status --book 1036645930
 bin/novel-trans status --book 1036645930 --status failed
 ```
 
-`status` prints counts by status. Pass `--status` to print matching chapter rows. `login`, `fetch`, `translate`, `upload`, `run`, and `site` are listed in help. They are not implemented yet. Fetch, translate, and upload take a book, not a chapter. Thor reserves the method name `run`, so the command is registered as `pipeline` and `bin/novel-trans run` is an alias.
+`status` prints counts by status. Pass `--status` to print matching chapter rows.
+
+`fetch` reads a saved chapter HTML file (the rendered DOM, not View Source) and writes `input/raw/{book_id}/{chapter_id}.txt` plus ledger status:
+
+```sh
+bin/novel-trans fetch --book 1036645930 \
+  --html-file tmp/chapter.html \
+  --chapter-id 747314648
+```
+
+`--force` rewrites a chapter that is already `fetched`. Live Qidian download, `login`, `translate`, `upload`, `run`, and `site` are not implemented yet. Fetch, translate, and upload take a book, not a chapter. Thor reserves the method name `run`, so the command is registered as `pipeline` and `bin/novel-trans run` is an alias.
 
 ## Config later
 

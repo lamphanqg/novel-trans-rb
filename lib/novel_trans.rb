@@ -12,8 +12,13 @@ module NovelTrans
     def ledger_root
       File.join(root, "var", "ledger")
     end
+
+    def raw_path(book_id, chapter_id)
+      File.join(root, "input", "raw", book_id.to_s, "#{chapter_id}.txt")
+    end
   end
 end
 
 require_relative "novel_trans/chapter_work"
+require_relative "novel_trans/qidian"
 require_relative "novel_trans/cli"
