@@ -1,0 +1,13 @@
+planning/
+vendor/
+tmp/
+var/
+auth/
+input/
+output/
+.env
+*.gem
+.bundle/cache
+.rspec_status
+node_modules/
+.ruby-lsp/

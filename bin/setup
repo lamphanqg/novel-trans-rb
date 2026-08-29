@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+bundle config set --local path vendor/bundle
+bundle install
+PLAYWRIGHT_CLI_VERSION=$(bundle exec ruby -e 'require "playwright/version"; puts Playwright::COMPATIBLE_PLAYWRIGHT_VERSION')
+mkdir -p vendor/playwright
+( cd vendor/playwright && npm install "playwright-core@${PLAYWRIGHT_CLI_VERSION}" )
+./vendor/playwright/node_modules/.bin/playwright-core install chromium
