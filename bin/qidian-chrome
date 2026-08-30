@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+mkdir -p auth/chrome-profile
+CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+if [[ ! -x "$CHROME" ]]; then
+  echo "Google Chrome not found at $CHROME" >&2
+  exit 1
+fi
+echo "Leave this Chrome open. If you are not logged in, scan the QR on qidian.com, then in another terminal:"
+echo "  bin/novel-trans fetch --book BOOK_ID --url CHAPTER_URL"
+exec "$CHROME" --remote-debugging-port=9222 --user-data-dir="$PWD/auth/chrome-profile" "https://www.qidian.com/"

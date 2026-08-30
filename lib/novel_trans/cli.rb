@@ -29,17 +29,19 @@ module NovelTrans
       not_built("login")
     end
 
-    desc "fetch", "Parse a saved Qidian chapter HTML file into raw text and ledger status"
+    desc "fetch", "Download Qidian chapters from --url, or parse --html-file"
     option :book, type: :string, required: true
     option :force, type: :boolean, default: false
     option :html_file, type: :string
     option :chapter_id, type: :string
+    option :url, type: :string, repeatable: true
     def fetch
       Qidian::BookFetch.new(
         book_id: options[:book],
         force: options[:force],
         html_file: options[:html_file],
-        chapter_id: options[:chapter_id]
+        chapter_id: options[:chapter_id],
+        urls: Array(options[:url])
       ).run
     end
 
