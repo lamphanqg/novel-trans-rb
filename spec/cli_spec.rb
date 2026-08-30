@@ -48,6 +48,10 @@ RSpec.describe NovelTrans::CLI do
     expect { described_class.start(%w[help translate]) }.to output(/cursor agent/).to_stdout
   end
 
+  it "names --old in replace help" do
+    expect { described_class.start(%w[help replace]) }.to output(/old/).to_stdout
+  end
+
   it "does not take a --cdp flag" do
     expect { described_class.start(%w[help fetch]) }.not_to output(/cdp/).to_stdout
   end
