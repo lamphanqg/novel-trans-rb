@@ -5,6 +5,7 @@ module NovelTrans
     class Session
       # Must match --remote-debugging-port in bin/qidian-chrome.
       CDP_ENDPOINT = "http://127.0.0.1:9222".freeze
+      PAUSE_RANGE = 2.5..8.0
 
       def self.connect
         Playwright.create(playwright_cli_executable_path: NovelTrans.playwright_cli) do |playwright|
@@ -67,6 +68,12 @@ module NovelTrans
         page.wait_for_timeout(2000)
       rescue Playwright::Error
         nil
+      end
+
+      def pause
+        seconds = rand(PAUSE_RANGE)
+        puts "wait #{format('%.1f', seconds)}s"
+        sleep(seconds)
       end
     end
   end

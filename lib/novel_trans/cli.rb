@@ -29,7 +29,7 @@ module NovelTrans
       not_built("login")
     end
 
-    desc "fetch", "Download Qidian chapters from --url, or parse --html-file"
+    desc "fetch", "Download catalog chapters, or only --url chapters, from Qidian"
     option :book, type: :string, required: true
     option :force, type: :boolean, default: false
     option :html_file, type: :string

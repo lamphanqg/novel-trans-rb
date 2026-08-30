@@ -48,6 +48,14 @@ RSpec.describe NovelTrans::CLI do
     expect { described_class.start(%w[help fetch]) }.not_to output(/cdp/).to_stdout
   end
 
+  it "tells the operator to start qidian-chrome for a catalog fetch" do
+    allow(NovelTrans::Qidian::Session).to receive(:connect)
+      .and_raise(NovelTrans::Error, "live fetch needs bin/qidian-chrome")
+    expect do
+      described_class.new.invoke(:fetch, [], { book: book_id })
+    end.to raise_error(NovelTrans::Error, /qidian-chrome/)
+  end
+
   it "tells the operator to start qidian-chrome when Chrome is not listening" do
     allow(NovelTrans::Qidian::Session).to receive(:connect)
       .and_raise(NovelTrans::Error, "live fetch needs bin/qidian-chrome")

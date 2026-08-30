@@ -1,5 +1,3 @@
-require "fileutils"
-
 module NovelTrans
   module Qidian
     class BookFetch
@@ -9,6 +7,7 @@ module NovelTrans
         @html_file = html_file
         @chapter_id = chapter_id
         @urls = Array(urls).compact.reject(&:empty?)
+        @persist = ChapterPersist.new(book_id: @book_id, force:)
       end
 
       def run
@@ -17,18 +16,21 @@ module NovelTrans
           return
         end
 
-        raise ArgumentError, "--url or --html-file is required" if @urls.empty?
+        if @urls.any?
+          fetch_urls
+          return
+        end
 
-        fetch_urls
+        fetch_catalog
       end
 
       def apply_html(html, chapter_id:)
-        if skip?(chapter_id)
+        if @persist.skip?(chapter_id)
           puts "skip #{chapter_id}"
           return
         end
 
-        apply_result(ChapterPage.parse(html, chapter_id:), chapter_id)
+        @persist.apply_result(ChapterPage.parse(html, chapter_id:), chapter_id)
       end
 
       private
@@ -43,7 +45,7 @@ module NovelTrans
         pending = []
         @urls.each do |url|
           chapter_id = chapter_id_for_url(url)
-          if skip?(chapter_id)
+          if @persist.skip?(chapter_id)
             puts "skip #{chapter_id}"
           else
             pending << [url, chapter_id]
@@ -52,8 +54,38 @@ module NovelTrans
         return if pending.empty?
 
         Session.connect do |session|
-          pending.each { |url, chapter_id| fetch_one_url(session, url, chapter_id) }
+          pending.each_with_index do |(url, chapter_id), i|
+            session.pause if i != 0
+            fetch_one_url(session, url, chapter_id)
+          end
         end
+      end
+
+      def fetch_catalog
+        Session.connect do |session|
+          page = session.blank_or_new_page
+          pending_catalog_items(page, session).each do |item|
+            session.pause
+            page.goto(item.url, waitUntil: "domcontentloaded", timeout: 30_000)
+            session.wait_for_chapter(page, item.chapter_id)
+            @persist.apply_result(ChapterPage.from_page(page, chapter_id: item.chapter_id), item.chapter_id)
+          end
+        end
+      end
+
+      def pending_catalog_items(page, session)
+        items = Catalog.parse(Catalog.html_from_page(page, @book_id, session:))
+        pending = []
+        items.each do |item|
+          next unless item.book_id == @book_id
+
+          if @persist.skip?(item.chapter_id)
+            puts "skip #{item.chapter_id}"
+          else
+            pending << item
+          end
+        end
+        pending
       end
 
       def fetch_one_url(session, url, chapter_id)
@@ -66,7 +98,7 @@ module NovelTrans
           page.goto(url, waitUntil: "domcontentloaded", timeout: 30_000)
         end
         session.wait_for_chapter(page, chapter_id)
-        apply_result(ChapterPage.from_page(page, chapter_id:), chapter_id)
+        @persist.apply_result(ChapterPage.from_page(page, chapter_id:), chapter_id)
       end
 
       def chapter_id_for_url(url)
@@ -76,48 +108,6 @@ module NovelTrans
         end
 
         ids[:chapter_id]
-      end
-
-      def skip?(chapter_id)
-        return false if @force
-
-        path = NovelTrans.raw_path(@book_id, chapter_id)
-        return false unless File.file?(path)
-        return false unless File.file?(ChapterWork.ledger_path(@book_id, chapter_id))
-
-        ChapterWork.load(@book_id, chapter_id).status == "fetched"
-      end
-
-      def apply_result(result, chapter_id)
-        case result.verdict
-        when :locked
-          write_ledger(chapter_id, "locked")
-          FileUtils.rm_f(NovelTrans.raw_path(@book_id, chapter_id))
-          puts "locked #{chapter_id}"
-        when :pua
-          write_ledger(chapter_id, "failed")
-          FileUtils.rm_f(NovelTrans.raw_path(@book_id, chapter_id))
-          puts "pua_font #{chapter_id}"
-        when :ok
-          path = NovelTrans.raw_path(@book_id, chapter_id)
-          FileUtils.mkdir_p(File.dirname(path))
-          File.write(path, "#{result.title}\n\n#{result.body}\n")
-          write_ledger(chapter_id, "fetched")
-          puts "fetched #{chapter_id}"
-        when :blocked
-          write_ledger(chapter_id, "failed")
-          FileUtils.rm_f(NovelTrans.raw_path(@book_id, chapter_id))
-          puts "failed #{chapter_id} (Qidian refused to render the chapter in this browser)"
-          puts "Start bin/qidian-chrome, log in there, then fetch again with --force"
-        else
-          write_ledger(chapter_id, "failed")
-          FileUtils.rm_f(NovelTrans.raw_path(@book_id, chapter_id))
-          puts "failed #{chapter_id} (no chapter body in the DOM)"
-        end
-      end
-
-      def write_ledger(chapter_id, status)
-        ChapterWork.new(book_id: @book_id, chapter_id:, status:).save
       end
     end
   end
