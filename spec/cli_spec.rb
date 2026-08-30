@@ -6,9 +6,9 @@ RSpec.describe NovelTrans::CLI do
   end
 
   it "prints a count row for every status" do
-    NovelTrans::ChapterWork.new(book_id: book_id, chapter_id: "747314648", status: "fetched").save
-    NovelTrans::ChapterWork.new(book_id: book_id, chapter_id: "747314649", status: "fetched").save
-    NovelTrans::ChapterWork.new(book_id: book_id, chapter_id: "747314650", status: "failed").save
+    NovelTrans::ChapterWork.new(book_id:, chapter_id: "747314648", status: "fetched").save
+    NovelTrans::ChapterWork.new(book_id:, chapter_id: "747314649", status: "fetched").save
+    NovelTrans::ChapterWork.new(book_id:, chapter_id: "747314650", status: "failed").save
 
     expect { invoke_status }.to output(
       <<~TSV
@@ -25,8 +25,8 @@ RSpec.describe NovelTrans::CLI do
   end
 
   it "prints matching rows when --status is set" do
-    NovelTrans::ChapterWork.new(book_id: book_id, chapter_id: "747314648", status: "fetched").save
-    NovelTrans::ChapterWork.new(book_id: book_id, chapter_id: "747314649", status: "failed").save
+    NovelTrans::ChapterWork.new(book_id:, chapter_id: "747314648", status: "fetched").save
+    NovelTrans::ChapterWork.new(book_id:, chapter_id: "747314649", status: "failed").save
 
     expect { invoke_status(status: "failed") }.to output(
       <<~TSV
@@ -38,5 +38,9 @@ RSpec.describe NovelTrans::CLI do
 
   it "rejects an unknown --status" do
     expect { invoke_status(status: "done") }.to raise_error(ArgumentError, /unknown status/)
+  end
+
+  it "names --html-file in fetch help" do
+    expect { described_class.start(%w[help fetch]) }.to output(/html-file/).to_stdout
   end
 end

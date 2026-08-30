@@ -6,6 +6,7 @@ AllCops:
   Exclude:
     - vendor/**/*
     - planning/**/*
+    - tmp/**/*
 
 Style/FrozenStringLiteralComment:
   EnforcedStyle: never
@@ -18,6 +19,9 @@ Style/StringLiterals:
 
 Bundler/OrderedGems:
   Enabled: false
+
+Style/HashSyntax:
+  EnforcedShorthandSyntax: always
 
 Metrics/ParameterLists:
   Max: 8
