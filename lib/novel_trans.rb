@@ -25,6 +25,10 @@ module NovelTrans
       File.join(root, "output", "vi", book_id.to_s)
     end
 
+    def vocab_path(book_id)
+      File.join(root, "config", "vocab", "#{book_id}.yml")
+    end
+
     def playwright_cli
       File.join(File.expand_path("..", __dir__), "vendor", "playwright", "node_modules", ".bin", "playwright-core")
     end
@@ -34,5 +38,6 @@ end
 require_relative "novel_trans/chapter_work"
 require_relative "novel_trans/qidian"
 require_relative "novel_trans/cursor_agent"
+require_relative "novel_trans/vocab"
 require_relative "novel_trans/book_translate"
 require_relative "novel_trans/cli"

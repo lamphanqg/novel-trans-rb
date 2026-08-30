@@ -20,6 +20,17 @@ RSpec.describe NovelTrans::CursorAgent do
     expect(vi).to eq("Chương 1")
   end
 
+  it "puts locked names in the prompt" do
+    expect(Open3).to receive(:capture3) do |*argv|
+      expect(argv.last).to include("皖江雨")
+      expect(argv.last).to include("Hoàn Giang Vũ")
+      ["ok", "", status(true)]
+    end
+
+    described_class.new(model: described_class::MODEL)
+                   .translate("x", names: { "皖江雨" => "Hoàn Giang Vũ" })
+  end
+
   it "raises when cursor agent exits non-zero" do
     allow(Open3).to receive(:capture3).and_return(["", "boom", status(false)])
     expect { described_class.new.translate("第一章") }.to raise_error(NovelTrans::Error, /boom/)

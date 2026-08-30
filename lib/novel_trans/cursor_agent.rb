@@ -9,8 +9,8 @@ module NovelTrans
       @model = model
     end
 
-    def translate(chinese)
-      text = ask(build_prompt(chinese))
+    def translate(chinese, names: {})
+      text = ask(build_prompt(chinese, names))
       raise Error, "cursor agent returned no Vietnamese text" if text.empty?
 
       text
@@ -43,13 +43,21 @@ module NovelTrans
       ]
     end
 
-    def build_prompt(chinese)
+    def build_prompt(chinese, names)
       <<~PROMPT
         Translate this Chinese web novel chapter to Vietnamese.
         Keep the title and paragraph breaks. Keep character names consistent.
         Print only the Vietnamese chapter. No commentary.
+        #{name_block(names)}
         #{chinese}
       PROMPT
+    end
+
+    def name_block(names)
+      return "" if names.empty?
+
+      lines = names.sort.map { |chinese, vietnamese| "#{chinese} → #{vietnamese}" }
+      "Use these names exactly:\n#{lines.join("\n")}\n"
     end
   end
 end

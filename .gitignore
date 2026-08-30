@@ -5,6 +5,7 @@ var/
 auth/
 input/
 output/
+config/vocab/
 .env
 *.gem
 .bundle/cache
