@@ -13,6 +13,7 @@ RSpec.describe NovelTrans::CursorAgent do
       expect(argv).to include("--workspace", NovelTrans.root)
       expect(argv).not_to include("--yolo", "--force")
       expect(argv.last).to include("第一章")
+      expect(argv.last).not_to include("NOVEL_TRANS_NAMES")
       ["Chương 1", "", status(true)]
     end
 
@@ -29,6 +30,38 @@ RSpec.describe NovelTrans::CursorAgent do
 
     described_class.new(model: described_class::MODEL)
                    .translate("x", names: { "皖江雨" => "Hoàn Giang Vũ" })
+  end
+
+  it "asks the agent for a YAML name mapping" do
+    expect(Open3).to receive(:capture3) do |*argv|
+      expect(argv.last).to include("YAML")
+      expect(argv.last).to include("皖江雨")
+      ["```yaml\n皖江雨: Hoàn Giang Vũ\n```", "", status(true)]
+    end
+
+    expect(
+      described_class.new(model: described_class::MODEL)
+                     .extract_names("皖江雨来了", "Hoàn Giang Vũ đến.")
+    ).to eq("皖江雨" => "Hoàn Giang Vũ")
+  end
+
+  it "splits Vietnamese and names from one reply" do
+    mark = described_class::NAMES_MARK
+    expect(Open3).to receive(:capture3) do |*argv|
+      expect(argv.last).to include(mark)
+      ["Hoàn Giang Vũ đến.\n#{mark}\n皖江雨: Hoàn Giang Vũ\n", "", status(true)]
+    end
+
+    vi, names = described_class.new(model: described_class::MODEL)
+                               .translate_with_names("皖江雨来了")
+    expect(vi).to eq("Hoàn Giang Vũ đến.")
+    expect(names).to eq("皖江雨" => "Hoàn Giang Vũ")
+  end
+
+  it "raises when the name marker is missing" do
+    allow(Open3).to receive(:capture3).and_return(["Hoàn Giang Vũ đến.", "", status(true)])
+    expect { described_class.new.translate_with_names("皖江雨来了") }
+      .to raise_error(NovelTrans::Error, /no name list/)
   end
 
   it "raises when cursor agent exits non-zero" do

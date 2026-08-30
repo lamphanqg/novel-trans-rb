@@ -52,6 +52,14 @@ module NovelTrans
       BookTranslate.new(book_id: options[:book], force: options[:force]).run
     end
 
+    desc "replace", "Replace a string in a book's Vietnamese files"
+    option :book, type: :string, required: true
+    option :old, type: :string, required: true
+    option :new, type: :string, required: true
+    def replace
+      ViReplace.new(book_id: options[:book], old: options[:old], new: options[:new]).run
+    end
+
     desc "upload", "Put a book's Vietnamese files on R2"
     def upload
       not_built("upload")
