@@ -6,7 +6,6 @@ module NovelTrans
       @book_id = book_id.to_s
       @force = force
       @agent = agent
-      @names = Vocab.load(@book_id)
     end
 
     def run
@@ -31,7 +30,7 @@ module NovelTrans
       end
 
       begin
-        vietnamese = @agent.translate(File.read(raw), names: @names)
+        vietnamese = @agent.translate(File.read(raw))
       rescue Error => e
         puts "failed #{row.chapter_id} (#{e.message})"
         return
