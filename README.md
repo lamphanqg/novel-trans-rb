@@ -30,9 +30,12 @@ bin/qidian-chrome   # leave this running
 bin/novel-trans fetch --book 1016572786
 bin/novel-trans fetch --book 1016572786 \
   --url 'https://www.qidian.com/chapter/1016572786/514924883/'
+bin/novel-trans translate --book 1016572786
 ```
 
-`--url` is repeatable. Each URL must belong to `--book`. Omit `--url` to walk the catalog and download every chapter. Fetch waits a few seconds between live requests so Qidian is less likely to rate-limit. `--html-file` plus `--chapter-id` replays a saved rendered DOM without a browser. `--force` rewrites a chapter that is already `fetched`. `login`, `translate`, `upload`, `run`, and `site` are not implemented yet. Thor reserves the method name `run`, so the command is registered as `pipeline` and `bin/novel-trans run` is an alias.
+`--url` is repeatable. Each URL must belong to `--book`. Omit `--url` to walk the catalog and download every chapter. Fetch waits a few seconds between live requests so Qidian is less likely to rate-limit. `--html-file` plus `--chapter-id` replays a saved rendered DOM without a browser. `--force` rewrites a chapter that is already `fetched`.
+
+`translate --book` runs `cursor agent -p --mode ask --model gemini-3.7-flash-high` on every `fetched` chapter and writes `output/vi/{book_id}/{chapter_id}.txt`. It skips `translated` and `uploaded` unless you pass `--force`. Override the model with `CURSOR_MODEL`. `login`, `upload`, `run`, and `site` are not implemented yet. Thor reserves the method name `run`, so the command is registered as `pipeline` and `bin/novel-trans run` is an alias.
 
 ## Config later
 

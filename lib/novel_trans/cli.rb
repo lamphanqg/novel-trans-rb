@@ -45,9 +45,11 @@ module NovelTrans
       ).run
     end
 
-    desc "translate", "Translate every fetched chapter in a book with Cursor CLI"
+    desc "translate", "Translate fetched chapters to Vietnamese with cursor agent"
+    option :book, type: :string, required: true
+    option :force, type: :boolean, default: false
     def translate
-      not_built("translate")
+      BookTranslate.new(book_id: options[:book], force: options[:force]).run
     end
 
     desc "upload", "Put a book's Vietnamese files on R2"
