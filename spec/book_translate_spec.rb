@@ -71,4 +71,15 @@ RSpec.describe NovelTrans::BookTranslate do
   it "requires a ledger for the book" do
     expect { translate }.to raise_error(NovelTrans::Error, /fetch first/)
   end
+
+  it "passes vocab names to the agent" do
+    seed(chapter_id, status: "fetched", body: "皖江雨来了")
+    path = NovelTrans.vocab_path(book_id)
+    FileUtils.mkdir_p(File.dirname(path))
+    File.write(path, "皖江雨: Hoàn Giang Vũ\n")
+    expect(agent).to receive(:translate)
+      .with("皖江雨来了", names: { "皖江雨" => "Hoàn Giang Vũ" })
+      .and_return("Hoàn Giang Vũ đến.")
+    expect { translate }.to output(/translated/).to_stdout
+  end
 end

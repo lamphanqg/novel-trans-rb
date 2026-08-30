@@ -35,10 +35,16 @@ bin/novel-trans translate --book 1016572786
 
 `--url` is repeatable. Each URL must belong to `--book`. Omit `--url` to walk the catalog and download every chapter. Fetch waits a few seconds between live requests so Qidian is less likely to rate-limit. `--html-file` plus `--chapter-id` replays a saved rendered DOM without a browser. `--force` rewrites a chapter that is already `fetched`.
 
-`translate --book` runs `cursor agent -p --mode ask --model gemini-3.7-flash-high` on every `fetched` chapter and writes `output/vi/{book_id}/{chapter_id}.txt`. It skips `translated` and `uploaded` unless you pass `--force`. Override the model with `CURSOR_MODEL`. `login`, `upload`, `run`, and `site` are not implemented yet. Thor reserves the method name `run`, so the command is registered as `pipeline` and `bin/novel-trans run` is an alias.
+`translate --book` runs `cursor agent -p --mode ask --model gemini-3.7-flash-high` on every `fetched` chapter and writes `output/vi/{book_id}/{chapter_id}.txt`. It skips `translated` and `uploaded` unless you pass `--force`. Override the model with `CURSOR_MODEL`. Names in `config/vocab/{book_id}.yml` go into every translate prompt. Those yaml files stay on disk like `input/` and `output/`. They are not committed. `login`, `upload`, `run`, and `site` are not implemented yet. Thor reserves the method name `run`, so the command is registered as `pipeline` and `bin/novel-trans run` is an alias.
 
-## Config later
+## Names
 
-`config/novels.yml` will list books. `config/vocab/{book_id}.yml` will hold per-novel names.
+`config/vocab/{book_id}.yml` is a growing list, not a full cast. Add a line when you decide a reading:
+
+```yaml
+皖江雨: Hoàn Giang Vũ
+```
+
+`config/novels.yml` will list books later.
 
 Translations stay in a private bucket except the HTML reader prefix described in the plan.
