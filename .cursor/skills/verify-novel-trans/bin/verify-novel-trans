@@ -1,0 +1,152 @@
+#!/usr/bin/env bash
+# Helper for the verify-novel-trans skill. Run from repo root or any cwd.
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
+SKILL_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+EVIDENCE_ROOT="${SKILL_DIR}/evidence"
+
+VERIFY_BOOK_ID="${VERIFY_BOOK_ID:-1036645930}"
+VERIFY_CHAPTER_ID="${VERIFY_CHAPTER_ID:-747314648}"
+FIXTURE_UNLOCKED="${REPO_ROOT}/spec/fixtures/qidian/chapter_unlocked.html"
+
+usage() {
+  cat <<'EOF'
+Usage: verify-novel-trans <command>
+
+Commands:
+  doctor              Read-only health check before driving the CLI
+  cli -- <args...>    Run bin/novel-trans; tee stdout/stderr to gitignored evidence/
+  cleanup-data        Remove ledger/raw rows for the verify fixture book only
+  evidence-dir        Print gitignored per-run evidence path (creates if needed)
+
+Environment:
+  RUN_ID              Subdirectory under evidence/ (default: UTC timestamp); not for git
+  VERIFY_BOOK_ID      Fixture book id (default: 1036645930)
+  VERIFY_CHAPTER_ID   Fixture chapter id (default: 747314648)
+EOF
+}
+
+run_id() {
+  if [[ -n "${RUN_ID:-}" ]]; then
+    echo "${RUN_ID}"
+  else
+    date -u +%Y%m%dT%H%M%SZ
+  fi
+}
+
+evidence_run_dir() {
+  local dir="${EVIDENCE_ROOT}/$(run_id)"
+  mkdir -p "${dir}"
+  echo "${dir}"
+}
+
+cmd_doctor() {
+  local ok=0
+  echo "verify-novel-trans doctor (repo=${REPO_ROOT})"
+
+  if [[ ! -f "${REPO_ROOT}/Gemfile" ]]; then
+    echo "FAIL: not a novel-trans-rb checkout (missing Gemfile)"
+    ok=1
+  else
+    echo "OK: Gemfile present"
+  fi
+
+  if [[ ! -x "${REPO_ROOT}/bin/novel-trans" ]]; then
+    echo "FAIL: bin/novel-trans missing or not executable"
+    ok=1
+  else
+    echo "OK: bin/novel-trans executable"
+  fi
+
+  if [[ ! -d "${REPO_ROOT}/vendor/bundle" ]]; then
+    echo "FAIL: vendor/bundle missing — run bin/setup from repo root"
+    ok=1
+  else
+    echo "OK: vendor/bundle present"
+  fi
+
+  if ! (cd "${REPO_ROOT}" && bundle exec ruby -e 'require "thor"; require_relative "lib/novel_trans"'); then
+    echo "FAIL: bundle cannot load novel_trans"
+    ok=1
+  else
+    echo "OK: novel_trans loads under bundle"
+  fi
+
+  if [[ ! -f "${FIXTURE_UNLOCKED}" ]]; then
+    echo "FAIL: missing fixture ${FIXTURE_UNLOCKED}"
+    ok=1
+  else
+    echo "OK: chapter_unlocked.html fixture present"
+  fi
+
+  if (cd "${REPO_ROOT}" && bin/novel-trans help >/dev/null 2>&1); then
+    echo "OK: bin/novel-trans help exits 0"
+  else
+    echo "FAIL: bin/novel-trans help failed"
+    ok=1
+  fi
+
+  echo "verify book_id=${VERIFY_BOOK_ID} chapter_id=${VERIFY_CHAPTER_ID}"
+  echo "evidence_root=${EVIDENCE_ROOT}"
+
+  if [[ "${ok}" -ne 0 ]]; then
+    exit 1
+  fi
+  echo "doctor: all checks passed"
+}
+
+cmd_cli() {
+  if [[ "${1:-}" != "--" ]]; then
+    echo "Usage: verify-novel-trans cli -- <bin/novel-trans args...>" >&2
+    exit 2
+  fi
+  shift
+  local out_dir
+  out_dir="$(evidence_run_dir)"
+  local slug
+  slug="$(echo "$*" | tr ' /' '__' | tr -cd '[:alnum:]_-' | cut -c1-80)"
+  [[ -z "${slug}" ]] && slug="help"
+  local transcript="${out_dir}/cli-${slug}.txt"
+  (
+    cd "${REPO_ROOT}"
+    echo "# cmd: bin/novel-trans $*"
+    echo "# cwd: $(pwd)"
+    echo "# time: $(date -u -Iseconds)"
+    bin/novel-trans "$@"
+  ) > >(tee -a "${transcript}") 2>&1
+  local ec=$?
+  echo "# exit: ${ec}" >> "${transcript}"
+  exit "${ec}"
+}
+
+cmd_cleanup_data() {
+  rm -rf \
+    "${REPO_ROOT}/var/ledger/${VERIFY_BOOK_ID}" \
+    "${REPO_ROOT}/input/raw/${VERIFY_BOOK_ID}" \
+    "${REPO_ROOT}/output/vi/${VERIFY_BOOK_ID}"
+  echo "removed verify fixture data for book ${VERIFY_BOOK_ID}"
+}
+
+cmd_evidence_dir() {
+  evidence_run_dir
+}
+
+main() {
+  local cmd="${1:-}"
+  case "${cmd}" in
+    doctor) cmd_doctor ;;
+    cli) shift; cmd_cli "$@" ;;
+    cleanup-data) cmd_cleanup_data ;;
+    evidence-dir) cmd_evidence_dir ;;
+    -h|--help|help|"") usage ;;
+    *)
+      echo "unknown command: ${cmd}" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+}
+
+main "$@"
