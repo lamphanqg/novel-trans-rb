@@ -14,4 +14,10 @@ RSpec.describe NovelTrans::Qidian::Catalog do
     ids = described_class.parse_chapter_url("https://www.qidian.com/chapter/1036645930/747314648/")
     expect(ids).to eq(book_id: "1036645930", chapter_id: "747314648")
   end
+
+  it "ignores the latest-chapters strip and duplicate catalog rows" do
+    html = File.read(File.expand_path("../fixtures/qidian/catalog_with_latest.html", __dir__))
+    items = described_class.parse(html)
+    expect(items.map(&:chapter_id)).to eq(%w[498215647 498232866 498298854])
+  end
 end
