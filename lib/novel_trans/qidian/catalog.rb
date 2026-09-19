@@ -12,12 +12,19 @@ module NovelTrans
         "https://book.qidian.com/info/%s/",
         "https://m.qidian.com/book/%s/catalog"
       ].freeze
+      CATALOG_READY = "#j-catalogWrap, #j-catalogList, .catalog-content-wrap".freeze
+      CATALOG_SCOPE = /id=["']j-catalogWrap["']|id=["']j-catalogList["']|class=["'][^"']*catalog-content-wrap/i
 
       def self.parse(html)
         items = []
-        html.to_s.split(/<li\b/i).drop(1).each do |chunk|
+        seen = {}
+        catalog_scope(html).split(/<li\b/i).drop(1).each do |chunk|
           item = item_from_li("<li#{chunk}")
-          items << item if item
+          next unless item
+          next if seen[item.chapter_id]
+
+          seen[item.chapter_id] = true
+          items << item
         end
         items
       end
@@ -41,6 +48,7 @@ module NovelTrans
           session.pause if i != 0
           page.goto(format(template, book_id), waitUntil: "domcontentloaded", timeout: 30_000)
           page.wait_for_selector("body", timeout: 15_000)
+          page.wait_for_selector(CATALOG_READY, timeout: 15_000)
           html = page.content
           return html if parse(html).any?
         rescue Playwright::Error
@@ -59,7 +67,15 @@ module NovelTrans
       def self.strip_tags(text)
         text.to_s.gsub(/<[^>]+>/, "").gsub("&nbsp;", " ").strip
       end
-      private_class_method :item_from_li, :strip_tags
+
+      def self.catalog_scope(html)
+        html = html.to_s
+        match = CATALOG_SCOPE.match(html)
+        return html unless match
+
+        html[match.begin(0)..]
+      end
+      private_class_method :item_from_li, :strip_tags, :catalog_scope
     end
   end
 end
