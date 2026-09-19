@@ -12,3 +12,4 @@ config/vocab/
 .rspec_status
 node_modules/
 .ruby-lsp/
+.cursor/skills/verify-novel-trans/evidence/
