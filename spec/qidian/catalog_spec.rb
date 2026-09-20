@@ -20,4 +20,11 @@ RSpec.describe NovelTrans::Qidian::Catalog do
     items = described_class.parse(html)
     expect(items.map(&:chapter_id)).to eq(%w[498215647 498232866 498298854])
   end
+
+  it "ignores live desktop promos and keeps catalog chapter order" do
+    html = File.read(File.expand_path("../fixtures/qidian/catalog_live_desktop.html", __dir__))
+    items = described_class.parse(html)
+    expect(items.map(&:chapter_id)).to eq(%w[498215647 498232866 498298854 736922827])
+    expect(items[1].chapter_id).not_to eq("736922827")
+  end
 end

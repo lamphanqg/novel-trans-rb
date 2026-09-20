@@ -12,8 +12,13 @@ module NovelTrans
         "https://book.qidian.com/info/%s/",
         "https://m.qidian.com/book/%s/catalog"
       ].freeze
-      CATALOG_READY = "#j-catalogWrap, #j-catalogList, .catalog-content-wrap".freeze
-      CATALOG_SCOPE = /id=["']j-catalogWrap["']|id=["']j-catalogList["']|class=["'][^"']*catalog-content-wrap/i
+      CATALOG_READY = "#allCatalog, #j-catalogWrap, #j-catalogList, .catalog-content-wrap".freeze
+      CATALOG_LIVE_SCOPE = /id=["']allCatalog["']|class=["'][^"']*catalog-all["']/i
+      CATALOG_LEGACY_SCOPE = /id=["']j-catalogWrap["']|id=["']j-catalogList["']|class=["'][^"']*catalog-content-wrap/i
+      LIVE_PROMO_STRIP = [
+        %r{<div\b[^>]*\bcatalog-newest-con\b[^>]*>.*?</div>}im,
+        %r{<a\b[^>]*\bbook-latest-chapter\b[^>]*>.*?</a>}im
+      ].freeze
 
       def self.parse(html)
         items = []
@@ -69,13 +74,20 @@ module NovelTrans
       end
 
       def self.catalog_scope(html)
-        html = html.to_s
-        match = CATALOG_SCOPE.match(html)
-        return html unless match
+        html = without_live_promos(html.to_s)
+        legacy = CATALOG_LEGACY_SCOPE.match(html)
+        return html[legacy.begin(0)..] if legacy
 
-        html[match.begin(0)..]
+        live = CATALOG_LIVE_SCOPE.match(html)
+        return html[live.begin(0)..] if live
+
+        html
       end
-      private_class_method :item_from_li, :strip_tags, :catalog_scope
+
+      def self.without_live_promos(html)
+        LIVE_PROMO_STRIP.reduce(html) { |doc, pattern| doc.gsub(pattern, "") }
+      end
+      private_class_method :item_from_li, :strip_tags, :catalog_scope, :without_live_promos
     end
   end
 end
